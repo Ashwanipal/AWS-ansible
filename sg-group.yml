@@ -1,0 +1,50 @@
+---
+- name: Configuring the EC2 Instance
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+      - name: generating temp cradentials
+        sts_assume_role:
+          role_arn: "ARN"
+          role_session_name: "someRoleSession"
+          region: us-east-1
+        register: assumed_role
+
+      - name: create a security group in us-east-1
+        ec2_group:
+          name: ansibletest
+          description: an example ec2 group
+          region: us-east-1
+          aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+          aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+          security_token: "{{ assumed_role.sts_creds.session_token }}"
+          rules:
+            - proto: tcp
+              from_port: 80
+              to_port: 80
+              cidr_ip: 0.0.0.0/0
+        register: security_group
+
+      - name: creating EC2 instance
+        ec2:
+          #tag: ansiblevm
+          key_name: ansible-test
+          instance_type: t2.micro
+          image: ami-a4dc46db
+          wait: yes
+          region: us-east-1
+          group: ansibletest
+          count: 1
+          vpc_subnet_id: subnet-465d324a
+          #assign_public_ip: yes
+        register: ec2
+        
+      - name: Associating after allocating elastic IP
+        ec2_eip:
+          in_vpc: yes
+          reuse_existing_ip_allowed: yes
+          state: present
+          region: us-east-1
+          device_id: "{{ ec2.instance_id[0] }}"
+          register: elastic_ip
