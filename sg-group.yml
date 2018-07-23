@@ -2,7 +2,6 @@
 - name: Configuring the EC2 Instance
   hosts: localhost
   connection: local
-  gather_facts: false
   tasks:
       - name: generating temp cradentials
         sts_assume_role:
@@ -28,23 +27,33 @@
 
       - name: creating EC2 instance
         ec2:
-          #tag: ansiblevm
+          instance_tags:
+             Name: ExtraPower
           key_name: ansible-test
           instance_type: t2.micro
           image: ami-a4dc46db
           wait: yes
           region: us-east-1
           group: ansibletest
-          count: 1
+          exact_count: 1
+          count_tag:
+             Name: ExtraPower
           vpc_subnet_id: subnet-465d324a
-          #assign_public_ip: yes
-        register: ec2
-        
+          assign_public_ip: yes  
+          user_data: |
+               #!/bin/sh
+               sudo apt-get install nginx -y 
+        register: newec2
+
       - name: Associating after allocating elastic IP
         ec2_eip:
           in_vpc: yes
           reuse_existing_ip_allowed: yes
           state: present
           region: us-east-1
-          device_id: "{{ ec2.instance_id[0] }}"
-          register: elastic_ip
+          device_id: "{{ newec2.instance_ids[0] }}"
+        register: instance_eip
+      - debug: var=instance_eip.public_ip
+
+
+

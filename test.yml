@@ -1,0 +1,45 @@
+---
+- name: Configuring the EC2 Instance
+  hosts: localhost
+  connection: local
+  tasks:
+      - name: generating temp cradentials
+        sts_assume_role:
+          role_arn: "ARN"
+          role_session_name: "someRoleSession"
+          region: us-east-1
+        register: assumed_role
+
+
+      - name: creating EC2 instance
+        ec2:
+          aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+          aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+          security_token: "{{ assumed_role.sts_creds.session_token }}"
+          instance_tags:
+             Name: ExtraPower
+          key_name: ansible-test
+          instance_type: t2.micro
+          image: ami-a4dc46db
+          wait: yes
+          region: us-east-1
+          group: ansibletest
+          vpc_subnet_id: subnet-465d324a
+          assign_public_ip: yes   
+        register: newinstance
+
+
+      - name: Allocating elastic IP to instance
+        ec2_eip:
+          aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+          aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+          security_token: "{{ assumed_role.sts_creds.session_token }}"
+          in_vpc: yes
+          reuse_existing_ip_allowed: yes
+          state: present
+          region: us-east-1
+          instance_id: "{{ newinstance.instance_ids[0] }}"
+        register: instance_eip
+      - debug: var=instance_eip.public_ip
+
+
