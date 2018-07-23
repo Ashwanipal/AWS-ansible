@@ -1,0 +1,48 @@
+---
+- hosts: all
+  sudo: true
+  gather_facts: False
+
+  pre_tasks:
+    - raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+    - setup:
+
+  tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    - name: add group "tomcat"
+      group: name=tomcat
+
+    - name: add user "tomcat"
+      user: name=tomcat group=tomcat home=/opt/tomcat createhome=no
+      become: true
+      become_method: sudo
+
+    - name: Download Tomcat
+      get_url: url=http://repo.maven.apache.org/maven2/org/apache/tomee/apache-tomee/7.0.2/apache-tomee-7.0.2-plume.tar.gz dest=/opt/apache-tomee-7.0.2-plume.tar.gz
+
+    - name: Extract Tomcat archive
+      #command: tar -xzvf /opt/apache-tomee-7.0.2-plume.tar.gz
+      unarchive: 
+            src: /opt/apache-tomee-7.0.2-plume.tar.gz 
+            dest: /opt
+            remote_src: yes
+
+
+    - name: Extract Tomcat archive
+      command: mv  /opt/apache-tomee-plume-7.0.2 /opt/tomcat
+
+
+    - name: Change ownership of Tomcat installation
+      file: path=/opt/tomcat owner=tomcat group=tomcat state=directory recurse=yes
+
+    - name: copy the config file
+      copy: src=/home/ubuntu/AWS-ansible/tomcat-conf/tomcat.service.tmpl dest=/etc/systemd/system/tomcat.service
+      copy: src=/home/ubuntu/AWS-ansible/tomcat-conf/tomcat-users.xml.tmpl dest=/opt/tomcat/conf/tomcat-users.xml
+      copy: src=/home/ubuntu/AWS-ansible/tomcat-conf/context.xml.tmpl dest=/opt/tomcat/webapps/manager/META-INF/context.xml
+
+    - name: restart tomcat
+      service: name=tomcat state=restarted
