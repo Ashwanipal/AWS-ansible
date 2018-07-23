@@ -1,0 +1,18 @@
+---
+- hosts: all
+  sudo: true
+  gather_facts: False
+
+  pre_tasks:
+    - raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+    - setup:
+
+  tasks:
+    - name: update apt cache
+      apt: update_cache=yes
+    - name: install apache
+      apt: name=apache2 state=present
+    - name: install mysql
+      apt: name=mysql-server state=present
+    - name: install php
+      apt: name=php5 state=present
