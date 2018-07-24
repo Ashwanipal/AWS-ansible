@@ -1,0 +1,50 @@
+---
+- hosts: all
+  sudo: true
+  gather_facts: False
+
+  pre_tasks:
+    - raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+    - setup:
+
+  tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    - name: Mysql | Set root password
+      command: debconf-set-selections <<< 'mysql-server mysql-server/root_password password pqwer1350'
+
+    - name: Mysql | Set root repassword
+      command: debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password pqwer1350'
+
+    - name: Install Mysql
+      apt: pkg=mysql-server state=latest
+
+    - name: create database
+      command: mysql -u root -pqwer1350  -e 'drop database IF EXISTS emmaus;'
+
+    - name: create database
+      command: mysql -u root -pqwer1350  -e 'CREATE DATABASE emmaus;'
+
+    - name: create database
+      command: mysql -u root -pqwer1350  -e 'FLUSH PRIVILEGES;'
+
+    - name: copy the DB dump
+      copy:
+        src: /opt/jenkins/workspace/database-setup-test/dbecsdev.sql
+        dest: /tmp/dbecsdev.sql
+        #mode: u=rwx,g=rx,o=rx
+
+    - name: copy the DB dump
+      copy:
+        src: /home/ubuntu/AWS-ansible/restore.sh
+        dest: /tmp/restore.sh
+        mode: u=rwx,g=rx,o=rx
+
+    - name: restore DB dump
+      command: bash /tmp/restore.sh
+
+
+
