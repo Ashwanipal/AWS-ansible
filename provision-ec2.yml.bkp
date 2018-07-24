@@ -5,7 +5,7 @@
   tasks:
       - name: generating temp cradentials
         sts_assume_role:
-          role_arn: "arn"
+          role_arn: "arn:aws:iam::211831525993:role/launchec2"
           role_session_name: "someRoleSession"
           region: us-east-1
         register: assumed_role
@@ -23,11 +23,6 @@
               from_port: 80
               to_port: 80
               cidr_ip: 0.0.0.0/0
-         rules:
-            - proto: tcp
-              from_port: 22
-              to_port: 22
-              cidr_ip: 0.0.0.0/0
         register: security_group
 
       - name: creating EC2 instance
@@ -42,9 +37,9 @@
           group: ansibletest
           exact_count: 1
           count_tag:
-             Name: Tomcat-test
+             Name: ExtraPower
           vpc_subnet_id: subnet-465d324a
-          assign_public_ip: yes
+          assign_public_ip: yes  
         register: newec2
 
       - name: Associating after allocating elastic IP
@@ -56,4 +51,6 @@
           device_id: "{{ newec2.instance_ids[0] }}"
         register: instance_eip
       - debug: var=instance_eip.public_ip
+
+
 
