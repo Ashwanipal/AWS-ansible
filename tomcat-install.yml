@@ -10,7 +10,6 @@
   tasks:
     - name: Update and upgrade apt packages
       apt:
-        upgrade: yes
         update_cache: yes
 
     - name: add group "tomcat"
@@ -62,5 +61,5 @@
          state: restarted
 
     - name: port forwording
-         command: sudo iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
+      command: sudo iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
 
