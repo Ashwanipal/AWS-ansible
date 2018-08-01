@@ -12,6 +12,8 @@ RUN chmod g+x /opt/tomcat/conf
 COPY ./tomcat-conf/tomcat.service.tmpl /etc/systemd/system/tomcat.service
 COPY ./tomcat-conf/tomcat-users.xml.tmpl /opt/tomcat/conf/tomcat-users.xml
 COPY ./tomcat-conf/context.xml.tmpl /opt/tomcat/webapps/manager/META-INF/context.xml
+
+#COPY ./dockerised-java/target/DockerExample.war /opt/tomcat/webapps/DockerExample.war
 #RUN systemctl daemon-reload
 #RUN systemctl start tomcat
 #RUN systemctl status tomcat

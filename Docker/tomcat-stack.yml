@@ -1,5 +1,12 @@
 version: "2"
 services:
+  maven-pkg:
+    image: maven
+    volumes:
+      - /home/ubuntu/AWS-ansible/dockerised-java:/project
+    working_dir: /project
+    command: bash -c "mvn package"
+
   tomcat-app:
     build:
       context: ..
@@ -10,6 +17,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - /tmp/:/tmp/ 
+      - /home/ubuntu/AWS-ansible/dockerised-java/target/DockerExample.war:/opt/tomcat/webapps/ROOT.war
+      - /home/ubuntu/AWS-ansible/dockerised-java/target/DockerExample:/opt/tomcat/webapps/ROOT
     command: bash -c "/opt/tomcat/bin/catalina.sh run"
 

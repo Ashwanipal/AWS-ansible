@@ -5,7 +5,7 @@
   tasks:
       - name: generating temp cradentials
         sts_assume_role:
-          role_arn: "arn:aws:iam::xxxxxxxxxxxx:role/somerolename"
+          role_arn: "arn:aws:iam::211831525993:role/launchec2"
           role_session_name: "someRoleSession"
           region: us-east-1
         register: assumed_role
@@ -39,7 +39,7 @@
           instance_tags:
              Name: Tomcat-test
           key_name: ansible-test
-          instance_type: t2.micro
+          instance_type: t2.large
           image: ami-a4dc46db
           wait: yes
           region: us-east-1
